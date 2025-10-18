@@ -52,7 +52,7 @@ public class EmailService {
         }
     }
 
-    public String buildVerificationEmail(String username, String code) {
+    public String buildVerificationEmail(String username, String verifyUrl) {
         return "<html><body style='margin:0;background:" + colorBg + ";color:" + colorText + ";font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif'>" +
                 "<table width='100%' cellpadding='0' cellspacing='0' role='presentation'>" +
                 "<tr><td align='center'>" +
@@ -61,8 +61,10 @@ public class EmailService {
                 "<img alt='MoChat' src='" + logoUrl + "' style='height:48px'/></td></tr>" +
                 "<tr><td style='padding:24px;background:#0b0f0c;border-radius:12px;border:1px solid #111'>" +
                 "<h2 style='margin:0 0 8px 0;color:" + colorPrimary + ";font-size:22px'>Verify your MoChat email</h2>" +
-                "<p style='margin:0 0 16px 0;opacity:.9'>Hello " + username + ", thanks for registering to MoChat. Use the code below to verify your email. It expires in 10 minutes.</p>" +
-                "<div style='margin:12px 0;padding:12px 16px;border:1px dashed " + colorAccent + ";border-radius:8px;font-size:28px;font-weight:700;letter-spacing:6px;color:" + colorAccent + ";text-align:center'>" + code + "</div>" +
+                "<p style='margin:0 0 16px 0;opacity:.9'>Hello " + username + ", thanks for registering to MoChat. Please confirm your email by clicking the button below.</p>" +
+                "<p style='margin:0 0 16px 0'>" +
+                "<a href='" + verifyUrl + "' style='display:inline-block;padding:12px 18px;background:" + colorPrimary + ";color:#fff;text-decoration:none;border-radius:8px'>Verify Email</a>" +
+                "</p>" +
                 "<p style='margin:8px 0 0 0;font-size:12px;opacity:.7'>If you didn’t create an account, you can safely ignore this email.</p>" +
                 "</td></tr>" +
                 "<tr><td style='padding:16px;text-align:center;font-size:12px;opacity:.7'>" +

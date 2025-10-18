@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 public class BackendApplication implements CommandLineRunner {
 
-	@Value("${backend.url}")
+	@Value("${backend.url:http://localhost:8080}")
 	private String backendUrl;
 
 	@Value("${common}")

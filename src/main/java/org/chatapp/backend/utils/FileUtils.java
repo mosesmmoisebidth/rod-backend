@@ -13,7 +13,7 @@ import java.util.UUID;
 @Component
 public class FileUtils {
 
-    @Value("${backend.url}")
+    @Value("${backend.url:http://localhost:8080}")
     public void setBackendUrl(String value) {
         BACKEND_URL = value;
     }
