@@ -1,0 +1,75 @@
+# ---- Java / Maven / Spring Boot ----
+# Build output
+/target/
+**/target/
+
+# Compiled class files
+*.class
+
+# Logs
+logs/
+*.log
+spring.log
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# Local environment files and secrets
+.env
+*.env
+
+# Local Spring profiles (keep default application.properties committed)
+application-local.properties
+application-*.local.properties
+application-*.local.yaml
+application-*.local.yml
+
+# Keystores & certificates
+*.jks
+*.keystore
+*.pem
+*.p12
+
+# File uploads (keep the folder but ignore contents)
+uploads/**
+!uploads/.gitkeep
+
+# ---- IDEs & Editors ----
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse / STS
+.project
+.classpath
+.settings/
+.apt_generated/
+.factorypath
+.springBeans
+.tern-project
+
+# NetBeans
+nbproject/private/
+build/
+dist/
+nbbuild/
+.nb-gradle/
+
+# VS Code
+.vscode/
+
+# Mac / Windows / Linux system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+.Spotlight-V100
+.Trashes
+
+# Maven backup files
+pom.xml.versionsBackup
+release.properties
