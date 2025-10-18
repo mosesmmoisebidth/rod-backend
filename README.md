@@ -1,6 +1,6 @@
-# Chat App Backend (Spring Boot)
+# Rod App Backend (Spring Boot)
 
-Production-ready backend for a chat application built with Spring Boot, PostgreSQL, JWT authentication (access + refresh tokens), email verification by 6‑digit code, and WebSocket messaging. Includes Swagger/OpenAPI documentation and a global JSON error handler.
+Production-ready backend for application built with Spring Boot, PostgreSQL, JWT authentication (access + refresh tokens), email verification by 6‑digit code, and WebSocket messaging. Includes Swagger/OpenAPI documentation and a global JSON error handler.
 
 ## Features
 - User registration with email verification via 6‑digit code
