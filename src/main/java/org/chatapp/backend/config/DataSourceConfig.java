@@ -9,6 +9,12 @@ import org.springframework.core.env.Environment;
 import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Objects;
@@ -27,6 +33,9 @@ public class DataSourceConfig {
 
     @Bean
     public DataSource dataSource() {
+        // Try to ensure env is populated from a local .env file if none of the expected vars are present
+        ensureEnvFromDotEnvIfNeeded();
+
         // Priority 1: Explicit JDBC env variables (e.g., Heroku-like)
         String jdbcUrl = env.getProperty("JDBC_DATABASE_URL");
         String jdbcUser = env.getProperty("JDBC_DATABASE_USERNAME");
@@ -53,11 +62,45 @@ public class DataSourceConfig {
             return buildHikari(springUrl, springUser, springPass);
         }
 
-        // Last resort: let Boot try its auto-configuration
-        // (This should rarely happen since we provide defaults in application.properties)
-        HikariConfig config = new HikariConfig();
-        config.setDriverClassName(driverClassName);
-        return new HikariDataSource(config);
+        // No usable datasource info found -> fail fast with clear guidance
+        throw new IllegalStateException("Database configuration not found. Please set DATABASE_URL or SPRING_DATASOURCE_URL/SPRING_DATASOURCE_USERNAME/SPRING_DATASOURCE_PASSWORD (or JDBC_DATABASE_*). You can also provide a .env file at the backend root with DATABASE_URL.");
+    }
+
+    private void ensureEnvFromDotEnvIfNeeded() {
+        boolean hasJdbcTrio = StringUtils.hasText(env.getProperty("JDBC_DATABASE_URL"))
+                || StringUtils.hasText(env.getProperty("SPRING_DATASOURCE_URL"))
+                || StringUtils.hasText(env.getProperty("spring.datasource.url"));
+        boolean hasDatabaseUrl = StringUtils.hasText(env.getProperty("DATABASE_URL"));
+        if (hasJdbcTrio || hasDatabaseUrl) {
+            return; // already configured
+        }
+        Path dotEnv = Paths.get(".env");
+        if (!Files.exists(dotEnv)) {
+            return;
+        }
+        try (BufferedReader reader = Files.newBufferedReader(dotEnv, StandardCharsets.UTF_8)) {
+            reader.lines()
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .filter(line -> !line.startsWith("#"))
+                    .forEach(line -> {
+                        int idx = line.indexOf('=');
+                        if (idx > 0) {
+                            String key = line.substring(0, idx).trim();
+                            String value = line.substring(idx + 1).trim();
+                            // Remove optional surrounding quotes
+                            if ((value.startsWith("\"") && value.endsWith("\"")) || (value.startsWith("'") && value.endsWith("'"))) {
+                                value = value.substring(1, value.length() - 1);
+                            }
+                            // Only set if not already provided by real environment
+                            if (!StringUtils.hasText(System.getenv(key)) && !StringUtils.hasText(System.getProperty(key))) {
+                                System.setProperty(key, value);
+                            }
+                        }
+                    });
+        } catch (IOException ignored) {
+            // If .env cannot be read, ignore and let normal resolution continue
+        }
     }
 
     private HikariDataSource buildHikari(String url, String username, String password) {
