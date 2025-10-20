@@ -38,6 +38,8 @@ public class SecurityConfig {
                         .accessDeniedHandler(jsonAccessDeniedHandler)
                 )
                 .authorizeHttpRequests(auth -> auth
+                        // Always allow CORS preflight requests
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Auth endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         // Swagger/OpenAPI endpoints

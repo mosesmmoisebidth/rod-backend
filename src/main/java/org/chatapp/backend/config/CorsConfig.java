@@ -9,8 +9,22 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:4200")
-                .allowedMethods("*")
+                // Local development frontend
+                .allowedOrigins(
+                        "http://localhost:4200",
+                        "http://127.0.0.1:4200",
+                        "http://localhost",
+                        "http://127.0.0.1"
+                )
+                // Allow production domain(s)
+                .allowedOriginPatterns(
+                        "https://chatapp.moses.it.com",
+                        "http://chatapp.moses.it.com",
+                        "https://*.moses.it.com"
+                )
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .exposedHeaders("Authorization", "Content-Type")
                 .allowCredentials(true);
     }
 }
