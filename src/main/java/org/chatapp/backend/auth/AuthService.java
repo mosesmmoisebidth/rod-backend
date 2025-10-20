@@ -74,7 +74,12 @@ public class AuthService {
                 .createdAt(LocalDateTime.now())
                 .build();
         verificationTokenRepository.save(vt);
-        emailService.sendHtml(user.getEmail(), "Verify your email", emailService.buildVerificationEmail(user.getUsername(), code));
+        // Send email asynchronously to avoid blocking the request in case SMTP is slow/unavailable
+        emailService.sendHtmlAsync(
+                user.getEmail(),
+                "Verify your email",
+                emailService.buildVerificationEmail(user.getUsername(), code)
+        );
 
         // Return tokens optionally, but user won’t be allowed to access protected endpoints until verified
         String access = jwtService.generateAccessToken(user.getUsername());
