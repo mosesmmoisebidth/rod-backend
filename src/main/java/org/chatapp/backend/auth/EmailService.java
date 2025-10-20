@@ -25,7 +25,7 @@ public class EmailService {
     @Value("${app.mail.from.address}")
     private String fromAddress;
 
-    @Value("${app.mail.provider:smtp}")
+    @Value("${app.mail.provider:resend}")
     private String mailProvider;
 
     @Value("${app.mail.resend.api-key:}")
@@ -61,27 +61,15 @@ public class EmailService {
             return;
         }
         System.out.println("[EmailService] Provider=" + mailProvider + ", From=" + (fromName != null ? fromName : "") + " <" + fromAddress + ">, To=" + to);
-        // Switch by provider
         if ("resend".equalsIgnoreCase(mailProvider)) {
-            sendWithResend(to, subject, html);
+            boolean sent = sendWithResend(to, subject, html);
+            if (!sent) {
+                System.err.println("[EmailService] Resend failed or not configured; skipping send (SMTP disabled).");
+            }
             return;
         }
-        // Default: SMTP via JavaMailSender
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            helper.setTo(to);
-            helper.setSubject(subject);
-            helper.setText(html, true);
-            // For SMTP, fromName may contain just a name or an address
-            helper.setFrom(fromAddress);
-            mailSender.send(message);
-        } catch (Exception e) {
-            System.err.println("[EmailService] Failed to send email (SMTP): " + e.getClass().getName() + ": " + e.getMessage());
-            if (e.getCause() != null) {
-                System.err.println("[EmailService] Caused by: " + e.getCause().getClass().getName() + ": " + e.getCause().getMessage());
-            }
-        }
+        // If not using Resend, skip sending entirely per configuration
+        System.err.println("[EmailService] Email provider is not 'resend' (" + mailProvider + "); skipping send (SMTP disabled).");
     }
 
     private String stripHtml(String html) {
@@ -94,10 +82,10 @@ public class EmailService {
         return text.trim().replaceAll("\\s+", " ");
     }
 
-    private void sendWithResend(String to, String subject, String html) {
+    private boolean sendWithResend(String to, String subject, String html) {
         if (resendApiKey == null || resendApiKey.isBlank()) {
             System.err.println("[EmailService] RESEND provider selected but app.mail.resend.api-key is missing. Skipping send.");
-            return;
+            return false;
         }
         try {
             String fromCombined = fromName != null && fromName.contains("<")
@@ -146,14 +134,17 @@ public class EmailService {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (response.statusCode() >= 200 && response.statusCode() < 300) {
                 System.out.println("[EmailService] Resend email queued successfully: " + response.body());
+                return true;
             } else {
                 System.err.println("[EmailService] Resend API error: HTTP " + response.statusCode() + " -> " + response.body());
+                return false;
             }
         } catch (Exception e) {
             System.err.println("[EmailService] Failed to send email (Resend): " + e.getClass().getName() + ": " + e.getMessage());
             if (e.getCause() != null) {
                 System.err.println("[EmailService] Caused by: " + e.getCause().getClass().getName() + ": " + e.getCause().getMessage());
             }
+            return false;
         }
     }
 
@@ -163,19 +154,8 @@ public class EmailService {
     }
 
     public String buildVerificationEmail(String username, String code) {
-        // Minimal transactional template to improve deliverability (no external images or social links)
-        return "<html><body style='margin:0;background:" + colorBg + ";color:" + colorText + ";font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif'>" +
-                "<div style='max-width:600px;margin:0 auto;padding:24px'>" +
-                "<h2 style='margin:0 0 12px 0;color:" + colorPrimary + ";font-size:20px'>Your MoChat verification code</h2>" +
-                "<p style='margin:0 0 12px 0'>Hello " + username + ",</p>" +
-                "<p style='margin:0 0 12px 0'>Use the code below to verify your email address. This code expires in 10 minutes.</p>" +
-                "<div style='margin:16px 0;padding:12px 16px;border:1px solid " + colorAccent + ";border-radius:8px;font-size:26px;font-weight:700;letter-spacing:6px;color:" + colorAccent + ";text-align:center'>" + code + "</div>" +
-                "<p style='margin:0 0 12px 0;font-size:12px;opacity:.8'>If you didn’t request this, you can ignore this email.</p>" +
-                "<p style='margin:0 0 12px 0;font-size:12px;opacity:.8'>You received this email because a sign-up request was made at MoChat with this address.</p>" +
-                "<hr style='border:none;border-top:1px solid #e5e7eb;margin:16px 0'/>" +
-                "<p style='margin:0;font-size:12px;opacity:.8'>MoChat • " + address + "</p>" +
-                (supportEmail != null && !supportEmail.isBlank() ? "<p style='margin:4px 0 0 0;font-size:12px;opacity:.8'>Questions? Email <a style='color:" + colorPrimary + ";text-decoration:none' href='mailto:" + supportEmail + "'>" + supportEmail + "</a></p>" : "") +
-                "</div></body></html>";
+        // Per request: send only the verification code as the entire email body to reduce spam likelihood
+        return code;
     }
 
     public String buildResetCodeEmail(String username, String code) {
