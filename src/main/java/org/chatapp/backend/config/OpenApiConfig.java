@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Info;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
-import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
@@ -16,9 +15,7 @@ import org.springframework.context.annotation.Configuration;
                 version = "v1",
                 description = "REST API for Chat App with JWT authentication and WebSocket messaging"
         ),
-        servers = {
-                @Server(url = "https://chatapp.moses.it.com", description = "Production server")
-        },
+        // Do not hardcode 'servers' so Swagger defaults to the current host (works for both local and production)
         security = @SecurityRequirement(name = "bearerAuth")
 )
 @SecurityScheme(
