@@ -42,7 +42,10 @@ public class EmailService {
     private String colorAccent;
 
     public void sendHtml(String to, String subject, String html) {
-        if (!mailEnabled) return;
+        if (!mailEnabled) {
+            System.out.println("[EmailService] Email sending is DISABLED via app.mail.enabled=false (env EMAIL_ENABLED). Skipping send to " + to);
+            return;
+        }
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -52,7 +55,10 @@ public class EmailService {
             helper.setFrom(fromName);
             mailSender.send(message);
         } catch (Exception e) {
-            System.err.println("[EmailService] Failed to send email: " + e.getMessage());
+            System.err.println("[EmailService] Failed to send email: " + e.getClass().getName() + ": " + e.getMessage());
+            if (e.getCause() != null) {
+                System.err.println("[EmailService] Caused by: " + e.getCause().getClass().getName() + ": " + e.getCause().getMessage());
+            }
         }
     }
 
