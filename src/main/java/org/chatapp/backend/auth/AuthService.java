@@ -77,7 +77,7 @@ public class AuthService {
         // Send email asynchronously to avoid blocking the request in case SMTP is slow/unavailable
         emailService.sendHtmlAsync(
                 user.getEmail(),
-                "Verify your email",
+                "Your MoChat verification code",
                 emailService.buildVerificationEmail(user.getUsername(), code)
         );
 
